@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f4f6f0" />
+    <meta name="description" content="Connectez-vous à votre espace personnel." />
+    <title>Mon espace</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Mon espace, accueil">
+        <span class="brand-mark" aria-hidden="true">m.</span>
+        <span>mon espace</span>
+      </a>
+      <nav class="menu" aria-label="Menu principal" id="main-menu">
+        <button class="menu-link is-active" type="button" data-page="articles" aria-current="page">Articles</button>
+        <button class="menu-link" type="button" data-page="search">Rechercher</button>
+        <button class="menu-link" type="button" data-page="write">Écrire</button>
+        <button class="menu-link" type="button" data-page="admin" id="admin-nav" hidden>Administration</button>
+        <button class="menu-link" type="button" data-page="auth" id="auth-nav">Connexion</button>
+        <span class="user-label" id="user-label" hidden></span>
+        <button class="menu-link" type="button" id="header-logout" hidden>Déconnexion</button>
+      </nav>
+    </header>
+
+    <main id="main-content">
+      <div class="layout" id="auth-page" hidden>
+      <section class="welcome-panel" aria-labelledby="welcome-title">
+        <div class="welcome-topline"><span class="status-dot"></span> VOTRE ESPACE PERSONNEL</div>
+        <div class="welcome-copy">
+          <p class="eyebrow">Un bonjour, et vous voilà.</p>
+          <h1 id="welcome-title">Tout commence<br />par <em>vous.</em></h1>
+          <p class="welcome-description">Retrouvez votre espace, simplement et en toute tranquillité.</p>
+        </div>
+        <div class="welcome-bottom">
+          <span class="sunburst" aria-hidden="true">✳</span>
+          <span>Un espace à votre mesure</span>
+          <span class="welcome-line" aria-hidden="true"></span>
+        </div>
+      </section>
+
+      <section class="form-panel" aria-live="polite">
+        <div class="form-content" id="auth-view">
+          <p class="eyebrow form-eyebrow" id="form-eyebrow">RAVI DE VOUS REVOIR</p>
+          <h2 id="form-title">Connexion</h2>
+          <p class="form-intro" id="form-intro">Entrez vos identifiants pour retrouver votre espace.</p>
+          <form id="auth-form" novalidate>
+            <div class="field-group" id="name-group" hidden>
+              <label for="name">Votre nom</label>
+              <input id="name" name="name" type="text" autocomplete="name" placeholder="Camille Martin" />
+            </div>
+            <div class="field-group">
+              <label for="email">Adresse e-mail</label>
+              <input id="email" name="email" type="email" autocomplete="email" placeholder="vous@exemple.fr" required />
+            </div>
+            <div class="field-group">
+              <label for="password">Mot de passe</label>
+              <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Votre mot de passe" minlength="8" required />
+            </div>
+            <div class="field-group" id="confirm-group" hidden>
+              <label for="confirm-password">Confirmer le mot de passe</label>
+              <input id="confirm-password" name="confirm-password" type="password" autocomplete="new-password" placeholder="Répétez votre mot de passe" />
+            </div>
+            <p class="form-message" id="form-message" role="status" aria-live="polite"></p>
+            <button class="submit-button" id="submit-button" type="submit">
+              <span id="submit-label">Se connecter</span><span aria-hidden="true">↗</span>
+            </button>
+          </form>
+          <p class="switch-prompt" id="switch-prompt">Nouveau ici ? <button type="button" data-view="register">Créer un compte</button></p>
+        </div>
+        <div class="connected-view" id="connected-view" hidden>
+          <p class="eyebrow form-eyebrow">ESPACE PERSONNEL</p>
+          <span class="connected-icon" aria-hidden="true">✓</span>
+          <h2>Vous êtes connecté<span class="period">.</span></h2>
+          <p class="form-intro" id="connected-message">Bienvenue dans votre espace.</p>
+          <button class="submit-button logout-button" id="logout-button" type="button">
+            <span>Se déconnecter</span><span aria-hidden="true">↗</span>
+          </button>
+        </div>
+      </section>
+      </div>
+
+      <section class="content-page" id="articles-page" aria-labelledby="articles-title">
+        <div class="page-heading">
+          <p class="eyebrow">LE JOURNAL</p>
+          <h1 id="articles-title">Articles</h1>
+          <p class="page-intro">Les dernières publications, dans l’ordre de leur parution.</p>
+        </div>
+        <p class="page-message" id="articles-message" role="status" aria-live="polite"></p>
+        <div class="article-list" id="article-list" aria-live="polite"></div>
+      </section>
+
+      <section class="content-page" id="search-page" aria-labelledby="search-title" hidden>
+        <div class="page-heading">
+          <p class="eyebrow">EXPLORER</p>
+          <h1 id="search-title">Rechercher</h1>
+          <p class="page-intro">Trouvez un article publié ou un auteur.</p>
+        </div>
+        <form class="search-form" id="search-form" role="search">
+          <label for="site-search">Article, sujet ou auteur</label>
+          <div class="search-control">
+            <input id="site-search" name="q" type="search" placeholder="Ex. voyage, Camille…" autocomplete="off" />
+            <button class="search-button" type="submit">Rechercher</button>
+          </div>
+        </form>
+        <p class="page-message" id="search-message" role="status" aria-live="polite">Saisissez un terme pour commencer.</p>
+        <div class="search-results">
+          <section class="search-section" aria-labelledby="search-articles-title">
+            <h2 id="search-articles-title">Articles</h2>
+            <div id="search-article-results"></div>
+          </section>
+          <section class="search-section" aria-labelledby="search-authors-title">
+            <h2 id="search-authors-title">Auteurs</h2>
+            <div id="search-author-results"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="content-page" id="write-page" aria-labelledby="write-title" hidden>
+        <div class="page-heading">
+          <p class="eyebrow">CONTRIBUTION</p>
+          <h1 id="write-title">Écrire un article</h1>
+          <p class="page-intro">Préparez votre texte, puis choisissez de le publier ou de le garder en brouillon.</p>
+        </div>
+        <p class="page-message" id="writer-gate" role="status" aria-live="polite" hidden></p>
+        <form class="article-form" id="article-form" hidden>
+          <div class="field-group">
+            <label for="article-title">Titre</label>
+            <input id="article-title" name="titre" type="text" maxlength="160" placeholder="Le titre de votre article" required />
+          </div>
+          <div class="field-group">
+            <label for="article-body">Article</label>
+            <textarea id="article-body" name="article" rows="12" placeholder="Rédigez votre article…" required></textarea>
+          </div>
+          <div class="article-fields-row">
+            <div class="field-group">
+              <label for="article-date">Date</label>
+              <input id="article-date" name="date" type="date" required />
+            </div>
+            <div class="field-group">
+              <label for="article-published">Publication</label>
+              <select id="article-published" name="publier">
+                <option value="true">Publier</option>
+                <option value="false">Garder en brouillon</option>
+              </select>
+            </div>
+          </div>
+          <p class="form-message" id="article-form-message" role="status" aria-live="polite"></p>
+          <button class="submit-button" id="article-submit" type="submit">
+            <span>Enregistrer l’article</span><span aria-hidden="true">↗</span>
+          </button>
+        </form>
+      </section>
+
+      <section class="content-page" id="admin-page" aria-labelledby="admin-title" hidden>
+        <div class="page-heading">
+          <p class="eyebrow">GESTION DU SITE</p>
+          <h1 id="admin-title">Administration</h1>
+          <p class="page-intro">Gérez les comptes et la publication des articles.</p>
+        </div>
+        <p class="page-message" id="admin-gate" role="status" aria-live="polite" hidden></p>
+        <div class="admin-content" id="admin-content" hidden>
+          <section class="admin-section" aria-labelledby="users-title">
+            <div class="admin-section-heading">
+              <h2 id="users-title">Utilisateurs</h2>
+              <span class="admin-count" id="users-count"></span>
+            </div>
+            <div class="table-scroll">
+              <table class="admin-table">
+                <thead><tr><th>Nom</th><th>E-mail</th><th>Auteur</th><th>Administration</th><th>Action</th></tr></thead>
+                <tbody id="users-table-body"></tbody>
+              </table>
+            </div>
+            <p class="admin-empty" id="users-empty" hidden>Aucun utilisateur.</p>
+          </section>
+          <section class="admin-section" aria-labelledby="admin-articles-title">
+            <div class="admin-section-heading">
+              <h2 id="admin-articles-title">Articles</h2>
+              <span class="admin-count" id="admin-articles-count"></span>
+            </div>
+            <div class="table-scroll">
+              <table class="admin-table">
+                <thead><tr><th>Titre</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead>
+                <tbody id="admin-articles-table-body"></tbody>
+              </table>
+            </div>
+            <p class="admin-empty" id="admin-articles-empty" hidden>Aucun article.</p>
+          </section>
+          <p class="page-message" id="admin-message" role="status" aria-live="polite"></p>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <span>MON ESPACE <span class="footer-dot">·</span> 2026</span>
+      <span>Simplement chez vous.</span>
+    </footer>
+  </body>
+</html>

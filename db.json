@@ -1,0 +1,44 @@
+{
+  "users": [
+    {
+      "name": "Gabriel",
+      "email": "gabriel2@fifa.be",
+      "auteur": "True",
+      "poivre": "a4e5bef03ac3c3bee92a598f7b484847",
+      "sel": "3d86aa80baee2b748d3d23ec54046278",
+      "password": "7356958f260b4fb36b41126dbe7afe683be990ed853780c75371170054d693ed",
+      "id": "y38AcApAIXU",
+      "admin": false
+    },
+    {
+      "name": "Fani",
+      "email": "fani8@gmail.volt",
+      "auteur": true,
+      "poivre": "c1f031df61ea28a0f428900de6baa132",
+      "sel": "92792b64a53b6146c00799a532d5fcc3",
+      "password": "ee12437e61829fecbca534c697f9dc43e693e3927b161c6a921fade796d7cc95",
+      "id": "MZ2NMQXMhIM",
+      "admin": true
+    },
+    {
+      "name": "Coll",
+      "email": "coll@gmail.com",
+      "auteur": true,
+      "poivre": "7c2f6bcb389f9536a7af085a65faa61f",
+      "sel": "3c124650b3a40c80053cc68b329e400b",
+      "password": "a6e3ee9d1d5b9cd3128c060eed4ed3ce80ce54382c74433bbb47ca190a496184",
+      "id": "UHlJ012N2E8",
+      "admin": false
+    }
+  ],
+  "articles": [
+    {
+      "titre": "qUI VAS GAGNE LA COUPE DU MONDE",
+      "article": "LA FRANCE \nLA BELGIQUE \nL ITALIE \nET L ESPAGE \nLE BRAZIL\nL ARGENTINE",
+      "date": "2026-10-10",
+      "publier": true,
+      "id": "ZjBp76akaE4"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}
