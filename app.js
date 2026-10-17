@@ -1,5 +1,6 @@
-const USERS_URL = '/api/users';
 const ARTICLES_URL = '/api/articles';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const ITERATIONS = 210000;
 
 const form = document.querySelector('#auth-form');
@@ -68,9 +69,36 @@ async function derivePassword(password, salt, pepper) {
 }
 
 async function getUsers() {
-  const response = await fetch(USERS_URL);
-  if (!response.ok) throw new Error('Impossible de joindre le serveur. Vérifiez que json-server est lancé.');
-  return response.json();
+  return supabaseRequest('user?select=id,name,email,auteur,admin');
+}
+
+async function getUserByEmail(email) {
+  const rows = await supabaseRequest(`user?select=id,name,email,auteur,admin,sel,poivre,mdp&email=eq.${encodeURIComponent(email)}&limit=1`);
+  return rows[0] || null;
+}
+
+async function supabaseRequest(path, options = {}) {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    throw new Error('Configurez VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY dans .env.local, puis redémarrez Vite.');
+  }
+
+  const response = await fetch(`${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      ...options.headers,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.message || `Supabase a refusé la requête (${response.status}). Vérifiez les colonnes et les règles RLS de la table user.`);
+  }
+
+  const body = await response.text();
+  return body ? JSON.parse(body) : null;
 }
 
 function normalizedEmail(email) {
@@ -98,6 +126,7 @@ function showConnected(user) {
   document.querySelector('#auth-nav').hidden = true;
   document.querySelector('#admin-nav').hidden = !currentUser.admin;
   connectedMessage.textContent = `Bienvenue${user.name ? `, ${user.name}` : ''}. Vous êtes connecté avec ${user.email}.`;
+  openPage('auth');
   renderArticles();
   if (document.querySelector('#admin-page').hidden === false) openPage('admin');
 }
@@ -213,9 +242,9 @@ async function loadSearchData() {
   const message = document.querySelector('#search-message');
   message.textContent = 'Chargement des articles et des auteurs…';
   try {
-    const [usersResponse, articlesResponse] = await Promise.all([fetch(USERS_URL), fetch(ARTICLES_URL)]);
-    if (!usersResponse.ok || !articlesResponse.ok) throw new Error('Impossible de charger les résultats de recherche.');
-    const [allUsers, allArticles] = await Promise.all([usersResponse.json(), articlesResponse.json()]);
+    const [allUsers, articlesResponse] = await Promise.all([getUsers(), fetch(ARTICLES_URL)]);
+    if (!articlesResponse.ok) throw new Error('Impossible de charger les résultats de recherche.');
+    const allArticles = await articlesResponse.json();
     searchAuthors = allUsers
       .filter((user) => hasRole(user.auteur))
       .map(({ name, email }) => ({ name: name || '', email: email || '' }));
@@ -296,15 +325,16 @@ async function loadAdminData() {
   const message = document.querySelector('#admin-message');
   message.textContent = 'Chargement…';
   try {
-    const [usersResponse, articlesResponse] = await Promise.all([fetch(USERS_URL), fetch(ARTICLES_URL)]);
-    if (!usersResponse.ok || !articlesResponse.ok) throw new Error('Impossible de charger les données administratives.');
-    [users, articles] = await Promise.all([usersResponse.json(), articlesResponse.json()]);
+    const [allUsers, articlesResponse] = await Promise.all([getUsers(), fetch(ARTICLES_URL)]);
+    if (!articlesResponse.ok) throw new Error('Impossible de charger les données administratives.');
+    users = allUsers;
+    articles = await articlesResponse.json();
     renderAdminUsers();
     renderAdminArticles();
     message.textContent = '';
   } catch (error) {
     message.textContent = error instanceof TypeError
-      ? 'Serveur indisponible. Vérifiez que json-server est lancé.'
+      ? 'Serveur indisponible. Vérifiez la configuration Supabase et que json-server est lancé.'
       : error.message;
   }
 }
@@ -360,11 +390,10 @@ async function updateAdminPermission(user, checkbox) {
   if (!currentUser?.admin || user.id === currentUser.id) return;
   const requestedRole = checkbox.checked;
   checkbox.disabled = true;
-  const updated = await adminRequest(`${USERS_URL}/${encodeURIComponent(user.id)}`, {
+  const updated = await adminRequest(() => supabaseRequest(`user?id=eq.${encodeURIComponent(user.id)}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ admin: requestedRole }),
-  }, requestedRole ? 'Droits administrateur activés.' : 'Droits administrateur retirés.');
+  }), requestedRole ? 'Droits administrateur activés.' : 'Droits administrateur retirés.');
   if (!updated) {
     checkbox.checked = !requestedRole;
     checkbox.disabled = false;
@@ -392,21 +421,20 @@ function renderAdminArticles() {
   });
 }
 
-async function adminRequest(url, options, successMessage) {
+async function adminRequest(action, successMessage) {
   const message = document.querySelector('#admin-message');
   if (!currentUser?.admin) {
     message.textContent = 'Accès administrateur requis.';
     return false;
   }
   try {
-    const response = await fetch(url, options);
-    if (!response.ok) throw new Error('La modification a échoué.');
+    await action();
     await loadAdminData();
     message.textContent = successMessage;
     return true;
   } catch (error) {
     message.textContent = error instanceof TypeError
-      ? 'Serveur indisponible. Vérifiez que json-server est lancé.'
+      ? 'Serveur indisponible. Vérifiez Supabase et que json-server est lancé.'
       : error.message;
     return false;
   }
@@ -415,20 +443,26 @@ async function adminRequest(url, options, successMessage) {
 async function deleteUser(user) {
   if (user.id === currentUser?.id) return;
   if (!window.confirm(`Supprimer le compte de ${user.name || user.email} ?`)) return;
-  await adminRequest(`${USERS_URL}/${encodeURIComponent(user.id)}`, { method: 'DELETE' }, 'Utilisateur supprimé.');
+  await adminRequest(() => supabaseRequest(`user?id=eq.${encodeURIComponent(user.id)}`, { method: 'DELETE' }), 'Utilisateur supprimé.');
 }
 
 async function publishArticle(article) {
-  await adminRequest(`${ARTICLES_URL}/${encodeURIComponent(article.id)}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ publier: true }),
+  await adminRequest(async () => {
+    const response = await fetch(`${ARTICLES_URL}/${encodeURIComponent(article.id)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ publier: true }),
+    });
+    if (!response.ok) throw new Error('La modification a échoué.');
   }, 'Article publié.');
 }
 
 async function deleteArticle(article) {
   if (!window.confirm(`Supprimer l’article « ${article.titre || 'Sans titre'} » ?`)) return;
-  await adminRequest(`${ARTICLES_URL}/${encodeURIComponent(article.id)}`, { method: 'DELETE' }, 'Article supprimé.');
+  await adminRequest(async () => {
+    const response = await fetch(`${ARTICLES_URL}/${encodeURIComponent(article.id)}`, { method: 'DELETE' });
+    if (!response.ok) throw new Error('La modification a échoué.');
+  }, 'Article supprimé.');
 }
 
 menu.addEventListener('click', (event) => {
@@ -518,8 +552,7 @@ form.addEventListener('submit', async (event) => {
   submitLabel.textContent = 'Un instant…';
 
   try {
-    const users = await getUsers();
-    const existingUser = users.find((user) => normalizedEmail(user.email || '') === email);
+    const existingUser = await getUserByEmail(email);
 
     if (currentView === 'register') {
       if (existingUser) {
@@ -530,13 +563,12 @@ form.addEventListener('submit', async (event) => {
       const salt = randomSalt();
       const pepper = randomSalt();
       const passwordHash = await derivePassword(password, salt, pepper);
-      const response = await fetch(USERS_URL, {
+      const createdUsers = await supabaseRequest('user', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, auteur: false, poivre: pepper, sel: salt, password: passwordHash }),
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({ name, email, auteur: false, poivre: pepper, sel: salt, mdp: passwordHash }),
       });
-      if (!response.ok) throw new Error('La création du compte a échoué. Réessayez.');
-      const createdUser = await response.json();
+      const createdUser = createdUsers[0];
       showConnected(createdUser);
       return;
     }
@@ -547,7 +579,7 @@ form.addEventListener('submit', async (event) => {
     }
 
     const submittedHash = await derivePassword(password, existingUser.sel, existingUser.poivre);
-    if (submittedHash !== existingUser.password) {
+    if (submittedHash !== existingUser.mdp) {
       showMessage('Adresse e-mail ou mot de passe incorrect.');
       return;
     }
@@ -566,8 +598,7 @@ form.addEventListener('submit', async (event) => {
 try {
   const savedUser = JSON.parse(sessionStorage.getItem('currentUser'));
   if (savedUser?.email) {
-    getUsers().then((users) => {
-      const latestUser = users.find((user) => normalizedEmail(user.email || '') === normalizedEmail(savedUser.email));
+    getUserByEmail(normalizedEmail(savedUser.email)).then((latestUser) => {
       if (latestUser) showConnected(latestUser);
       else showAuth();
     }).catch(() => showAuth());

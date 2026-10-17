@@ -1,12 +1,12 @@
 {
-  "users": [
+  "usermail": [
     {
       "name": "Gabriel",
       "email": "gabriel2@fifa.be",
-      "auteur": "True",
+      "auteur": true,
       "poivre": "a4e5bef03ac3c3bee92a598f7b484847",
       "sel": "3d86aa80baee2b748d3d23ec54046278",
-      "password": "7356958f260b4fb36b41126dbe7afe683be990ed853780c75371170054d693ed",
+      "mdp": "7356958f260b4fb36b41126dbe7afe683be990ed853780c75371170054d693ed",
       "id": "y38AcApAIXU",
       "admin": false
     },
@@ -16,7 +16,7 @@
       "auteur": true,
       "poivre": "c1f031df61ea28a0f428900de6baa132",
       "sel": "92792b64a53b6146c00799a532d5fcc3",
-      "password": "ee12437e61829fecbca534c697f9dc43e693e3927b161c6a921fade796d7cc95",
+      "mdp": "ee12437e61829fecbca534c697f9dc43e693e3927b161c6a921fade796d7cc95",
       "id": "MZ2NMQXMhIM",
       "admin": true
     },
@@ -26,9 +26,18 @@
       "auteur": true,
       "poivre": "7c2f6bcb389f9536a7af085a65faa61f",
       "sel": "3c124650b3a40c80053cc68b329e400b",
-      "password": "a6e3ee9d1d5b9cd3128c060eed4ed3ce80ce54382c74433bbb47ca190a496184",
+      "mdp": "a6e3ee9d1d5b9cd3128c060eed4ed3ce80ce54382c74433bbb47ca190a496184",
       "id": "UHlJ012N2E8",
       "admin": false
+    },
+    {
+      "name": "Kellogs",
+      "email": "kellyngnmou@gmail.com",
+      "auteur": false,
+      "poivre": "4ba4fe6eddda620f008803befbc2b3f7",
+      "sel": "9d0ad4dad0bf464d328c86242cd52152",
+      "mdp": "22aaaec9ea72c9c4957f99032d02dff5edc723bf9b7e1dbd3f70f4f5cf1d628e",
+      "id": "3iToh-yQSaQ"
     }
   ],
   "articles": [
